@@ -41,7 +41,7 @@
 
       --container: 1200px;
       --gutter: clamp(16px, 4vw, 32px);
-      --header-h: 72px;
+      --header-h: 84px;
       --radius: 4px;
       --section-y: clamp(56px, 7vw, 92px);
       --ease: cubic-bezier(.2, .6, .2, 1);
@@ -233,7 +233,7 @@
       flex-shrink: 0;
       min-width: 0;
     }
-    .brand-mark { width: auto; height: 58px; flex-shrink: 0; object-fit: contain; }
+    .brand-mark { width: auto; height: 70px; flex-shrink: 0; object-fit: contain; }
     .brand-copy {
       display: grid;
       padding-left: 12px;
@@ -1237,7 +1237,8 @@
     }
 
     @media (max-width: 900px) {
-      :root { --header-h: 64px; }
+      :root { --header-h: 74px; }
+      .brand-mark { width: auto; height: 66px; }
       .menu-toggle { display: inline-flex; }
       .header-cta { display: none; }
       .main-nav {
@@ -1320,7 +1321,7 @@
     }
 
     @media (max-width: 600px) {
-      .brand-mark { width: auto; height: 50px; }
+      .brand-mark { width: auto; height: 60px; }
       .brand-copy { font-size: 10px; letter-spacing: 0.05em; padding-left: 10px; }
       .hero::before {
         background:
@@ -1387,7 +1388,7 @@
   <header class="site-header" id="top">
     <div class="container header-inner">
       <a href="#inicio" class="brand" aria-label="LDe Soluciones en Energías Eléctricas, inicio">
-        <img class="brand-mark" src="logo-icon.png" alt="LDe" width="58" height="58" />
+        <img class="brand-mark" src="logo-icon.png" alt="LDe" width="70" height="70" />
         <span class="brand-copy">Soluciones en<br>Energías Eléctricas</span>
       </a>
 
@@ -2236,7 +2237,7 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <a href="#inicio" class="brand" aria-label="LDe, volver al inicio">
-            <img class="brand-mark" src="logo-icon.png" alt="LDe" width="58" height="58" />
+            <img class="brand-mark" src="logo-icon.png" alt="LDe" width="70" height="70" />
             <span class="brand-copy">Soluciones en<br>Energías Eléctricas</span>
           </a>
           <strong>LDe Soluciones en Energías Eléctricas</strong>
