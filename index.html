@@ -1474,7 +1474,7 @@
            MP4, sin audio) y aparecerá automáticamente sobre la foto de arriba.
            Si el archivo no existe o falla, este <video> se oculta solo y se ve
            la foto de siempre — no rompe nada mientras no lo agregues. -->
-      <video class="hero__video" autoplay muted loop playsinline aria-hidden="true"
+      <video class="hero__video" autoplay muted loop playsinline webkit-playsinline="true" aria-hidden="true"
              onerror="this.style.display='none'">
         <source src="videos/hero.mp4" type="video/mp4"
                 onerror="this.closest('video').style.display='none'">
@@ -1598,7 +1598,7 @@
              queda la foto de respaldo de abajo. No reemplaza ningún diagrama. -->
         <figure class="media-strip reveal" aria-hidden="true">
           <img class="media-strip__img" src="https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=1600&q=70" alt="" loading="lazy" onerror="this.remove()">
-          <video class="media-strip__video" autoplay muted loop playsinline onerror="this.style.display='none'">
+          <video class="media-strip__video" autoplay muted loop playsinline webkit-playsinline="true" onerror="this.style.display='none'">
             <source src="videos/servicios.mp4" type="video/mp4" onerror="this.closest('video').style.display='none'">
           </video>
           <span class="media-strip__tag">Ingeniería en obra</span>
@@ -1977,7 +1977,7 @@
              queda la foto de respaldo de abajo. No reemplaza ningún diagrama. -->
         <figure class="media-strip reveal" aria-hidden="true">
           <img class="media-strip__img" src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1600&q=70" alt="" loading="lazy" onerror="this.remove()">
-          <video class="media-strip__video" autoplay muted loop playsinline onerror="this.style.display='none'">
+          <video class="media-strip__video" autoplay muted loop playsinline webkit-playsinline="true" onerror="this.style.display='none'">
             <source src="videos/nosotros.mp4" type="video/mp4" onerror="this.closest('video').style.display='none'">
           </video>
           <span class="media-strip__tag">Trabajo de campo</span>
@@ -2352,6 +2352,22 @@
           }, introFadeOut);
         }, introHold);
       }
+
+      /* Refuerzo de autoplay para Safari (iOS/macOS): Safari es el más
+         estricto con el autoplay y a veces ignora el atributo `muted` del
+         HTML o no arranca el <video> sin un .load()/.play() explícito. */
+      document.querySelectorAll('video[autoplay]').forEach(function (v) {
+        v.muted = true;
+        v.defaultMuted = true;
+        v.setAttribute('muted', '');
+        var tryPlay = function () {
+          v.play().catch(function () { /* Safari lo bloqueó; queda en el frame estático, no rompe nada */ });
+        };
+        v.load();
+        if (v.readyState >= 2) tryPlay();
+        else v.addEventListener('canplay', tryPlay, { once: true });
+        document.addEventListener('touchstart', tryPlay, { once: true, passive: true });
+      });
 
       /* Header: sombra al hacer scroll */
       function updateHeader() {
