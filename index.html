@@ -1530,20 +1530,14 @@
       .stats div + div { padding-left: 10px; }
     }
 
-    /* Botón de voz de presentación (hero) */
-    .voice-btn {
-      position: absolute; left: 16px; bottom: 16px; z-index: 5;
-      display: none; align-items: center; gap: 8px;
-      padding: 10px 16px; border-radius: 999px;
-      border: 2px solid rgba(255,255,255,.85); background: rgba(11,31,46,.72);
-      color: #fff; font: 600 14px/1 var(--font-body); cursor: pointer;
-    }
-    .voice-btn.is-ready { display: inline-flex; }
-    .voice-btn[aria-pressed="true"] { background: var(--yellow); border-color: var(--yellow); color: var(--navy); }
+    /* Botón de voz de presentación (hero): va junto a los otros botones, sin tapar nada */
+    .btn.voice-btn { display: none; gap: 8px; cursor: pointer; }
+    .btn.voice-btn.is-ready { display: inline-flex; }
+    .btn.btn--ghost.voice-btn[aria-pressed="true"] { background: var(--yellow); border-color: var(--yellow); color: var(--navy); }
 
     /* Botón de respaldo: aparece solo si el celular bloquea el autoplay (ahorro de batería/datos) */
     .video-play-fallback {
-      position: absolute; right: 16px; bottom: 16px; z-index: 5;
+      position: absolute; right: 16px; top: 92px; z-index: 5;
       width: 52px; height: 52px; border-radius: 50%;
       border: 2px solid rgba(255,255,255,.85); background: rgba(11,31,46,.65);
       color: #fff; font-size: 20px; line-height: 1; cursor: pointer; display: none;
@@ -2714,9 +2708,9 @@
     ];
     var MALE = /jorge|diego|juan|raul|raúl|pablo|carlos|enrique|miguel|male|masculin/i;
     var btn = document.createElement('button');
-    btn.type = 'button'; btn.className = 'voice-btn'; btn.setAttribute('aria-pressed', 'false');
+    btn.type = 'button'; btn.className = 'btn btn--ghost voice-btn'; btn.setAttribute('aria-pressed', 'false');
     btn.innerHTML = '<span aria-hidden="true">&#128266;</span><span class="voice-btn__t">Escuchar presentación</span>';
-    hero.appendChild(btn);
+    (hero.querySelector('.hero-actions') || hero).appendChild(btn);
     var speaking = false;
     function pickVoice() {
       var vs = speechSynthesis.getVoices().filter(function (v) { return /^es/i.test(v.lang); });
