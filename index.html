@@ -1530,6 +1530,17 @@
       .stats div + div { padding-left: 10px; }
     }
 
+    /* Botón de voz de presentación (hero) */
+    .voice-btn {
+      position: absolute; left: 16px; bottom: 16px; z-index: 5;
+      display: none; align-items: center; gap: 8px;
+      padding: 10px 16px; border-radius: 999px;
+      border: 2px solid rgba(255,255,255,.85); background: rgba(11,31,46,.72);
+      color: #fff; font: 600 14px/1 var(--font-body); cursor: pointer;
+    }
+    .voice-btn.is-ready { display: inline-flex; }
+    .voice-btn[aria-pressed="true"] { background: var(--yellow); border-color: var(--yellow); color: var(--navy); }
+
     /* Botón de respaldo: aparece solo si el celular bloquea el autoplay (ahorro de batería/datos) */
     .video-play-fallback {
       position: absolute; right: 16px; bottom: 16px; z-index: 5;
@@ -2685,6 +2696,61 @@
       document.addEventListener(ev, retry, { once: true, passive: true });
     });
     document.addEventListener('visibilitychange', function () { if (!document.hidden) retry(); });
+  })();
+  </script>
+
+  <script>
+  /* Presentación en voz (síntesis de voz del navegador, voz masculina en español si el dispositivo la tiene).
+     Solo se activa cuando la persona toca el botón: los navegadores no permiten audio automático. */
+  (function () {
+    var hero = document.querySelector('.hero');
+    if (!hero || !('speechSynthesis' in window)) return;
+    var TEXT = [
+      'LDe, Soluciones en Energías Eléctricas.',
+      'Somos una empresa de ingeniería eléctrica en Neiva, Huila.',
+      'Realizamos estudios, diseño, gestión y mantenimiento de sistemas de potencia, instalaciones de baja tensión, protecciones y puestas a tierra.',
+      'Elaboramos planos, diagramas unifilares, memorias de cálculo y documentación técnica, además de mediciones, inspecciones y supervisión de obras eléctricas.',
+      'Escríbenos por WhatsApp y cuéntanos tu proyecto.'
+    ];
+    var MALE = /jorge|diego|juan|raul|raúl|pablo|carlos|enrique|miguel|male|masculin/i;
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'voice-btn'; btn.setAttribute('aria-pressed', 'false');
+    btn.innerHTML = '<span aria-hidden="true">&#128266;</span><span class="voice-btn__t">Escuchar presentación</span>';
+    hero.appendChild(btn);
+    var speaking = false;
+    function pickVoice() {
+      var vs = speechSynthesis.getVoices().filter(function (v) { return /^es/i.test(v.lang); });
+      if (!vs.length) return null;
+      var pref = ['es-CO', 'es-MX', 'es-US', 'es-419', 'es-ES'];
+      var male = vs.filter(function (v) { return MALE.test(v.name); });
+      var pool = male.length ? male : vs;
+      for (var i = 0; i < pref.length; i++) {
+        var m = pool.filter(function (v) { return v.lang.replace('_', '-').indexOf(pref[i]) === 0; })[0];
+        if (m) return m;
+      }
+      return pool[0];
+    }
+    function setState(on) {
+      speaking = on;
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.querySelector('.voice-btn__t').textContent = on ? 'Detener' : 'Escuchar presentación';
+    }
+    function refresh() { if (pickVoice()) btn.classList.add('is-ready'); }
+    refresh();
+    if (speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', refresh);
+    btn.addEventListener('click', function () {
+      if (speaking) { speechSynthesis.cancel(); setState(false); return; }
+      speechSynthesis.cancel();
+      var voice = pickVoice(); setState(true);
+      TEXT.forEach(function (s, i) {
+        var u = new SpeechSynthesisUtterance(s);
+        u.lang = voice ? voice.lang : 'es-MX'; if (voice) u.voice = voice;
+        u.rate = 0.95; u.pitch = 0.9;
+        if (i === TEXT.length - 1) { u.onend = function () { setState(false); }; u.onerror = function () { setState(false); }; }
+        speechSynthesis.speak(u);
+      });
+    });
+    window.addEventListener('pagehide', function () { speechSynthesis.cancel(); });
   })();
   </script>
 </body>
