@@ -1530,9 +1530,18 @@
       .stats div + div { padding-left: 10px; }
     }
 
+    /* Botón de respaldo: aparece solo si el celular bloquea el autoplay (ahorro de batería/datos) */
+    .video-play-fallback {
+      position: absolute; right: 16px; bottom: 16px; z-index: 5;
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.85); background: rgba(11,31,46,.65);
+      color: #fff; font-size: 20px; line-height: 1; cursor: pointer; display: none;
+      align-items: center; justify-content: center; padding: 0 0 0 4px;
+    }
+    .video-play-fallback.is-visible { display: flex; }
+
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
-      .hero__video, .media-strip__video { display: none; }
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
@@ -2629,6 +2638,54 @@
         revealEls.forEach(function (el) { el.classList.add('is-visible'); });
       }
     }());
+  </script>
+
+  <script>
+  /* Videos de fondo en celular: fuerza muted + play y reintenta (iOS/Android son estrictos con el autoplay) */
+  (function () {
+    var vids = Array.prototype.slice.call(document.querySelectorAll('video[autoplay]'));
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function prep(v) {
+      v.muted = true; v.defaultMuted = true; v.volume = 0;
+      v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', 'true');
+      v.playsInline = true;
+    }
+    function tryPlay(v) {
+      if (reduced) return;
+      prep(v);
+      var p = v.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+    function addButton(v) {
+      var host = v.parentElement; if (!host) return null;
+      if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'video-play-fallback'; b.setAttribute('aria-label', 'Reproducir video');
+      b.innerHTML = '&#9654;';
+      b.addEventListener('click', function () { tryPlay(v); b.classList.remove('is-visible'); });
+      host.appendChild(b); return b;
+    }
+    vids.forEach(function (v) {
+      prep(v);
+      var btn = null;
+      v.addEventListener('canplay', function () { tryPlay(v); }, { once: true });
+      v.addEventListener('loadeddata', function () { tryPlay(v); }, { once: true });
+      v.addEventListener('playing', function () { if (btn) btn.classList.remove('is-visible'); });
+      try { v.load(); } catch (e) {}
+      tryPlay(v);
+      setTimeout(function () {
+        if (v.paused && !reduced && v.style.display !== 'none') {
+          if (!btn) btn = addButton(v);
+          if (btn) btn.classList.add('is-visible');
+        }
+      }, 2500);
+    });
+    function retry() { vids.forEach(tryPlay); }
+    ['touchstart', 'click', 'scroll'].forEach(function (ev) {
+      document.addEventListener(ev, retry, { once: true, passive: true });
+    });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) retry(); });
+  })();
   </script>
 </body>
 </html>
