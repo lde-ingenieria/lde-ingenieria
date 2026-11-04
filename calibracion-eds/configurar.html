@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Configurar acceso · EDS</title>
+<style>
+body{margin:0;padding:24px 16px;background:#f7f7f4;color:#121210;font:16px/1.5 system-ui,-apple-system,'Segoe UI',Arial,sans-serif}
+main{box-sizing:border-box;max-width:560px;margin:auto;padding:24px;background:#fff;border:1px solid #e8e4d6;border-top:14px solid #f4c218;border-bottom:5px solid #d3272c}
+h1{margin:0 0 8px;font-size:1.6rem}p{margin:0 0 14px;color:#4f4b41}label{display:block;margin-bottom:14px;font-weight:600}
+input{box-sizing:border-box;width:100%;min-height:48px;margin-top:4px;padding:8px 12px;border:1px solid #cfcab9;border-radius:8px;font:inherit}
+button{min-height:48px;padding:0 24px;border:0;border-radius:10px;background:#f4c218;color:#121210;font:700 16px system-ui,sans-serif;cursor:pointer}
+#m{margin-top:14px;font-weight:600}#m.mal{color:#b3261e}#m.bien{color:#1d6b35}a{color:#0b5cad}
+</style></head><body><main>
+<h1>Configurar acceso</h1>
+<p>Lo que escriba aquí no se envía a nadie: se cifra en este navegador y solo se usa para comprobar el permiso con GitHub. Al final se descarga <b>acceso-eds.json</b>, que no contiene su clave ni el permiso sin cifrar.</p>
+<form id="f">
+<label>Correo<input id="correo" type="email" autocomplete="username" required></label>
+<label>Clave (al menos 12 caracteres)<input id="clave" type="password" autocomplete="new-password" minlength="12" required></label>
+<label>Repita la clave<input id="clave2" type="password" autocomplete="new-password" minlength="12" required></label>
+<label>Permiso de GitHub (<a href="https://github.com/settings/personal-access-tokens/new?name=Calibracion%20EDS&amp;description=Datos%20de%20la%20app%20Calibracion%20y%20Mto%20EDS&amp;target_name=lde-ingenieria&amp;expires_in=366&amp;contents=write" target="_blank" rel="noopener">crearlo aquí</a>)<input id="token" type="password" autocomplete="off" required></label>
+<button>Comprobar y generar archivo</button><p id="m" role="status"></p>
+</form></main>
+<script>
+const $ = (i) => document.getElementById(i), REPO = 'lde-ingenieria/lde-calibracion-datos', N = 600000;
+const b64 = (u) => btoa(String.fromCharCode(...new Uint8Array(u)));
+const hex = (b) => Array.from(new Uint8Array(b)).map((x) => x.toString(16).padStart(2, '0')).join('');
+const aviso = (t, c) => { $('m').textContent = t; $('m').className = c || ''; };
+$('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const correo = $('correo').value.trim().toLowerCase(), clave = $('clave').value, token = $('token').value.trim();
+  if (clave !== $('clave2').value) return aviso('Las dos claves no coinciden.', 'mal');
+  aviso('Comprobando el permiso con GitHub…');
+  try {
+    const r = await fetch('https://api.github.com/repos/' + REPO, { headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    if (!r.ok) return aviso('GitHub no aceptó ese permiso (' + r.status + '). Revise que incluya el repositorio lde-calibracion-datos.', 'mal');
+    const j = await r.json(); if (!j.permissions || !j.permissions.push) return aviso('Ese permiso no puede guardar datos. En "Contents" elija "Read and write".', 'mal');
+    aviso('Cifrando…');
+    const sal = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(clave), 'PBKDF2', false, ['deriveKey']);
+    const llave = await crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: sal, iterations: N }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt']);
+    const cifrado = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, llave, new TextEncoder().encode(token));
+    const id = hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(correo)));
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({ cuentas: { [id]: { sal: b64(sal), iv: b64(iv), n: N, cifrado: b64(cifrado) } } })], { type: 'application/json' }));
+    a.download = 'acceso-eds.json'; a.click();
+    $('clave').value = $('clave2').value = $('token').value = '';
+    aviso('Listo. Se descargó acceso-eds.json. Avísele a Claude para publicarlo.', 'bien');
+  } catch (x) { aviso('No se pudo conectar con GitHub. Revise internet e intente de nuevo.', 'mal'); }
+});
+</script></body></html>
