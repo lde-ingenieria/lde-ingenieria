@@ -1,27 +1,4 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Calibración y Mto EDS</title><meta name="robots" content="noindex"><link rel="icon" href="/logo-icon.png">
-<style>
-body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#f7f7f4;color:#121210;font:16px/1.5 system-ui,-apple-system,'Segoe UI',Arial,sans-serif;padding:16px;box-sizing:border-box}
-main{background:#fff;border-radius:20px;box-shadow:0 8px 24px rgba(18,18,16,.08);padding:32px 28px;max-width:440px;width:100%;text-align:center}
-img{width:70px;height:70px}h1{font-size:1.5rem;margin:12px 0 6px}p{margin:0 0 18px;color:#6b675c}
-a.b{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 24px;border-radius:14px;background:#f4c218;color:#121210;font-weight:700;text-decoration:none}
-a.v{display:block;margin-top:16px;color:#6b675c;font-size:.9rem}
-</style></head><body><main>
-<img src="/logo-icon.png" alt="LDe"><h1 id="t">Abriendo la app…</h1><p id="m">Un momento, por favor.</p>
-<a class="b" id="ir" href="#" hidden>Entrar a la app</a><a class="v" href="/">Volver a la página</a>
-</main><script>
-(async function () {
-  const t = document.getElementById('t'), m = document.getElementById('m'), ir = document.getElementById('ir');
-  const apagada = () => { t.textContent = 'La app no está disponible ahora'; m.textContent = 'El equipo que la mantiene está apagado o sin conexión. Intente de nuevo en unos minutos.'; };
-  try {
-    const u = (await (await fetch('/acceso.json?t=' + Date.now(), { cache: 'no-store' })).json()).url;
-    if (!/^https:\/\/[a-z0-9-]+\.(trycloudflare\.com|ldelectricsolutions\.com)$/.test(u)) return apagada();
-    const destino = u + '/calibracion-eds/reporte-calibracion.html' + location.hash;
-    ir.href = destino;
-    const ctl = new AbortController(); setTimeout(() => ctl.abort(), 8000);
-    await fetch(u + '/estado', { mode: 'no-cors', cache: 'no-store', signal: ctl.signal });
-    location.replace(destino);
-  } catch (e) { apagada(); ir.hidden = !ir.href.startsWith('https'); }
-})();
-</script></body></html>
+<html lang="es"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Acceso · LDe</title>
+<script>location.replace('/acceso.html');</script></head>
+<body><a href="/acceso.html">Ir al acceso</a></body></html>
